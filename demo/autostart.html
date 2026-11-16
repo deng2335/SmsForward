@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>自启动管理 · 保活设置</title>
+<style>
+  :root {
+    --primary: #2F5BEA;
+    --primary-weak: #E1E8FF;
+    --on-primary-weak: #0B1E4D;
+    --bg: #F4F6FB;
+    --surface: #FFFFFF;
+    --surface-2: #F1F4FA;
+    --text: #0F1219;
+    --muted: #5B6375;
+    --outline: #E4E8F1;
+    --teal: #0F9D8F;
+    --amber: #E08A2E;
+    --red: #D9454F;
+    --radius: 24px;
+    --shadow: 0 8px 24px rgba(21, 31, 64, .06);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    background: #E9ECF4;
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 28px 16px 60px;
+  }
+
+  .device {
+    width: 412px;
+    max-width: 100%;
+    background: var(--bg);
+    border-radius: 38px;
+    box-shadow: 0 24px 60px rgba(13, 23, 52, .18);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ---------- 状态栏 ---------- */
+  .statusbar {
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 22px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--bg);
+  }
+  .statusbar .icons { display: flex; gap: 6px; align-items: center; opacity: .85; }
+  .statusbar .icons span { display: inline-block; }
+
+  /* ---------- 顶栏 ---------- */
+  .appbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px 10px;
+  }
+  .icon-btn {
+    width: 40px; height: 40px;
+    border: none; background: transparent;
+    border-radius: 14px;
+    display: grid; place-items: center;
+    cursor: pointer; color: var(--text);
+  }
+  .icon-btn:active { background: rgba(15, 18, 25, .06); }
+  .appbar h1 { font-size: 19px; margin: 0; font-weight: 700; letter-spacing: .2px; }
+  .appbar .spacer { flex: 1; }
+  .pill-demo {
+    font-size: 11px; font-weight: 600;
+    color: var(--amber);
+    background: rgba(224, 138, 46, .12);
+    padding: 5px 9px; border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  /* ---------- 内容 ---------- */
+  .content { padding: 0 18px; }
+
+  .hero {
+    background: linear-gradient(135deg, #2F5BEA 0%, #6B8BFF 100%);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 20px 20px 18px;
+    margin-top: 4px;
+  }
+  .hero h2 { margin: 0 0 6px; font-size: 21px; line-height: 1.35; }
+  .hero p { margin: 0; font-size: 13px; line-height: 1.6; color: rgba(255,255,255,.85); }
+  .hero .chips { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .hero .chip {
+    font-size: 11.5px; padding: 5px 10px; border-radius: 999px;
+    background: rgba(255,255,255,.16); color: #fff;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--outline);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-top: 14px;
+    box-shadow: var(--shadow);
+  }
+
+  .card-title {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .card-title h3 { margin: 0; font-size: 15px; font-weight: 700; }
+  .card-title .sub { font-size: 11.5px; color: var(--muted); }
+
+  /* ---------- 品牌选择 ---------- */
+  .brand-row {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    padding: 2px 0 4px;
+  }
+  .brand-row::-webkit-scrollbar { display: none; }
+  .brand {
+    flex: 0 0 auto;
+    display: flex; align-items: center; gap: 6px;
+    border: 1px solid var(--outline);
+    background: var(--surface);
+    border-radius: 999px;
+    padding: 6px 11px 6px 6px;
+    font-size: 12px; font-weight: 600; color: var(--text);
+    cursor: pointer;
+  }
+  .brand .dot {
+    width: 20px; height: 20px; border-radius: 7px;
+    display: grid; place-items: center;
+    font-size: 9px; font-weight: 800; color: #fff;
+  }
+  .brand.active {
+    border-color: transparent;
+    background: var(--primary-weak);
+    color: var(--on-primary-weak);
+    box-shadow: inset 0 0 0 1.5px var(--primary);
+  }
+
+  .detected {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface-2);
+    border-radius: 16px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    font-size: 12.5px;
+  }
+  .detected b { font-weight: 700; }
+  .detected .tag {
+    margin-left: auto; font-size: 11px; color: var(--teal);
+    background: rgba(15, 157, 143, .12);
+    padding: 3px 8px; border-radius: 999px; font-weight: 600;
+  }
+
+  /* ---------- 进度 ---------- */
+  .progress-head { display: flex; align-items: baseline; gap: 8px; }
+  .progress-head .num { font-size: 26px; font-weight: 800; color: var(--primary); }
+  .progress-head .den { font-size: 13px; color: var(--muted); }
+  .bar {
+    height: 7px; border-radius: 999px; background: var(--surface-2);
+    margin: 10px 0 4px; overflow: hidden;
+  }
+  .bar > i {
+    display: block; height: 100%; width: 0%;
+    background: linear-gradient(90deg, #2F5BEA, #0F9D8F);
+    border-radius: 999px; transition: width .25s ease;
+  }
+
+  .check {
+    display: flex; align-items: center; gap: 11px;
+    padding: 9px 0; cursor: pointer;
+    border-top: 1px dashed transparent;
+  }
+  .check .box {
+    width: 22px; height: 22px; border-radius: 8px;
+    border: 1.6px solid #C9D2E4; display: grid; place-items: center;
+    flex: 0 0 auto; transition: all .15s ease;
+  }
+  .check .box svg { opacity: 0; }
+  .check.done .box { background: var(--primary); border-color: var(--primary); }
+  .check.done .box svg { opacity: 1; }
+  .check.done .label { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+  .check .label { font-size: 13.5px; }
+
+  /* ---------- 步骤 ---------- */
+  .steps { position: relative; }
+  .step { display: flex; gap: 12px; padding: 12px 0; position: relative; }
+  .step + .step { border-top: 1px solid var(--outline); }
+  .step .no {
+    flex: 0 0 auto;
+    width: 26px; height: 26px; border-radius: 9px;
+    background: var(--primary-weak); color: var(--on-primary-weak);
+    font-size: 12px; font-weight: 800;
+    display: grid; place-items: center;
+    margin-top: 1px;
+  }
+  .step h4 { margin: 0 0 4px; font-size: 14px; font-weight: 700; }
+  .step .path {
+    font-size: 11.5px; color: var(--muted);
+    background: var(--surface-2);
+    border-radius: 10px; padding: 6px 9px;
+    line-height: 1.5; margin-bottom: 7px;
+    word-break: break-all;
+  }
+  .step .path b { color: var(--text); font-weight: 600; }
+  .step p { margin: 0; font-size: 12.5px; line-height: 1.6; color: var(--muted); }
+  .step .actions { display: flex; gap: 8px; margin-top: 9px; }
+  .btn {
+    border: none; cursor: pointer; font-family: inherit;
+    font-size: 12px; font-weight: 700;
+    padding: 8px 13px; border-radius: 12px;
+    background: var(--primary); color: #fff;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn.ghost {
+    background: var(--primary-weak); color: var(--on-primary-weak);
+  }
+  .btn.tiny { padding: 6px 10px; font-size: 11px; border-radius: 10px; }
+
+  /* ---------- 提示 ---------- */
+  .note {
+    display: flex; gap: 9px;
+    background: rgba(224, 138, 46, .10);
+    border: 1px solid rgba(224, 138, 46, .28);
+    color: #7A4A10;
+    border-radius: 16px; padding: 11px 12px;
+    font-size: 12px; line-height: 1.6; margin-top: 12px;
+  }
+  .note.blue {
+    background: rgba(47, 91, 234, .07);
+    border-color: rgba(47, 91, 234, .2);
+    color: #22397F;
+  }
+
+  /* ---------- 折叠列表 ---------- */
+  .acc { border-top: 1px solid var(--outline); }
+  .acc-item { border-bottom: 1px solid var(--outline); }
+  .acc-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 13px 0; cursor: pointer;
+  }
+  .acc-head .dot {
+    width: 26px; height: 26px; border-radius: 9px;
+    display: grid; place-items: center; color: #fff;
+    font-size: 10px; font-weight: 800; flex: 0 0 auto;
+  }
+  .acc-head .t { font-size: 13.5px; font-weight: 600; flex: 1; }
+  .acc-head .t small { display: block; font-size: 11px; color: var(--muted); font-weight: 400; }
+  .acc-head .arrow { transition: transform .18s ease; color: var(--muted); }
+  .acc-item.open .arrow { transform: rotate(90deg); }
+  .acc-body { display: none; padding: 0 0 12px 36px; }
+  .acc-item.open .acc-body { display: block; }
+  .acc-body ol { margin: 0 0 8px; padding-left: 18px; }
+  .acc-body li { font-size: 12.5px; line-height: 1.7; color: var(--muted); margin-bottom: 4px; }
+  .acc-body li b { color: var(--text); font-weight: 600; }
+
+  /* ---------- 底部操作（正式版固定，演示稿内联） ---------- */
+  .cta {
+    margin-top: 14px;
+  }
+  .cta .hint { font-size: 11.5px; color: var(--muted); margin-bottom: 10px; }
+  .cta .row { display: flex; gap: 10px; }
+  .cta .btn { padding: 13px 16px; font-size: 14px; border-radius: 16px; }
+  .cta .btn.main { flex: 1; }
+
+  /* ---------- toast ---------- */
+  .toast {
+    position: fixed; left: 50%; bottom: 40px;
+    transform: translate(-50%, 20px);
+    background: rgba(17, 21, 28, .92);
+    color: #fff; font-size: 12.5px;
+    padding: 10px 16px; border-radius: 12px;
+    opacity: 0; pointer-events: none;
+    transition: all .2s ease; max-width: 320px;
+    text-align: center; z-index: 99;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  .footer { padding: 18px 4px 0; font-size: 11px; color: var(--muted); line-height: 1.7; }
+  .footer b { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="device">
+  <div class="statusbar">
+    <span>21:47</span>
+    <span class="icons"><span>▮▮▮</span><span>WiFi</span><span>86%</span></span>
+  </div>
+
+  <div class="appbar">
+    <button class="icon-btn" onclick="toast('返回设置页（演示）')" aria-label="返回">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <h1>自启动管理</h1>
+    <span class="spacer"></span>
+    <span class="pill-demo">HTML 演示稿</span>
+  </div>
+
+  <div class="content">
+    <div class="hero">
+      <h2>让短信在后台活下来</h2>
+      <p>国产系统的「自启动白名单」「耗电管理」「应用速冻」会把 App 冻结。下面 5 项逐一放行，转发才不会被系统掐断。</p>
+      <div class="chips">
+        <span class="chip">自启动</span>
+        <span class="chip">后台运行</span>
+        <span class="chip">电池白名单</span>
+        <span class="chip">关闭速冻</span>
+        <span class="chip">任务加锁</span>
+      </div>
+    </div>
+
+    <!-- 品牌选择 -->
+    <div class="card">
+      <div class="card-title">
+        <h3>选择你的手机系统</h3>
+        <span class="sub">路径随版本略有差异</span>
+      </div>
+
+      <div class="detected">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2F5BEA" stroke-width="2" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg>
+        <span>检测到 <b id="deviceName">realme（RMX2200）</b></span>
+        <span class="tag">已匹配</span>
+      </div>
+
+      <div class="brand-row" id="brandRow"></div>
+    </div>
+
+    <!-- 进度 -->
+    <div class="card">
+      <div class="card-title">
+        <h3>保活进度</h3>
+        <span class="sub">点击勾选，已保存在本机</span>
+      </div>
+      <div class="progress-head">
+        <span class="num" id="doneNum">0</span>
+        <span class="den">/ 5 项已完成</span>
+      </div>
+      <div class="bar"><i id="barFill"></i></div>
+      <div id="checks"></div>
+    </div>
+
+    <!-- 当前品牌步骤 -->
+    <div class="card">
+      <div class="card-title">
+        <h3 id="stepsTitle">realme 设置步骤</h3>
+        <span class="sub" id="stepsSub">realme UI 3.0 及以上</span>
+      </div>
+      <div class="steps" id="steps"></div>
+      <div class="note" id="brandNote" style="display:none"></div>
+    </div>
+
+    <!-- 快捷入口 -->
+    <div class="card">
+      <div class="card-title">
+        <h3>快捷入口</h3>
+        <span class="sub">正式版会直接跳转</span>
+      </div>
+      <div class="actions" style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn ghost tiny" onclick="toast('将打开：应用详情设置（正式版）')">应用详情</button>
+        <button class="btn ghost tiny" onclick="toast('将打开：电池优化白名单（正式版）')">电池优化</button>
+        <button class="btn ghost tiny" onclick="toast('将打开：通知设置（正式版）')">通知设置</button>
+        <button class="btn ghost tiny" onclick="toast('将尝试跳转：自启动管理（正式版）')">自启动管理</button>
+      </div>
+      <div class="note blue" style="margin-top:12px">
+        按钮会按包名依次尝试跳转，全部失败时回退到「应用详情」页，不会白点。
+      </div>
+    </div>
+
+    <!-- 全部品牌 -->
+    <div class="card">
+      <div class="card-title">
+        <h3>全部机型路径</h3>
+        <span class="sub">点开查看</span>
+      </div>
+      <div class="acc" id="acc"></div>
+    </div>
+
+    <div class="cta">
+      <div class="hint">正式版里，这条操作栏固定在页面底部；演示稿放在这里方便你看完整页。</div>
+      <div class="row">
+        <button class="btn ghost" onclick="toast('演示稿：正式版会显示保活原理说明')">说明</button>
+        <button class="btn main" onclick="toast('演示稿：正式版会依次尝试跳转自启动 / 耗电管理页面')">一键去设置</button>
+      </div>
+    </div>
+
+    <div class="footer">
+      <b>说明：</b>不同系统版本菜单名会变（例如 realme UI 1.0/2.0 叫「自启动管理」，3.0+ 叫「自启动」），找不到时用系统设置顶部的搜索框搜关键词，效果一样。<br/>
+      演示稿里的按钮不会真的跳转，正式版会跳到对应系统页面。
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const BRANDS = {
+    realme: {
+      name: 'realme', badge: 'rm', color: '#F5B800', device: 'realme（RMX2200）',
+      title: 'realme 设置步骤', sub: 'realme UI 3.0 及以上',
+      note: 'realme UI 1.0 / 2.0 的自启动入口在「设置 › 应用管理 › 自启动管理」，其余步骤相同。',
+      steps: [
+        { t: '允许自启动', path: ['设置', '应用', '自启动'], d: '在列表里找到「短信转发」，打开右侧开关。' },
+        { t: '允许完全后台行为', path: ['设置', '电池', '应用耗电管理', '短信转发'], d: '打开「允许自启动」「允许关联启动」「允许完全后台行为」三个开关。' },
+        { t: '关闭应用速冻', path: ['手机管家', '应用速冻'], d: '确认「短信转发」没有被勾选冻结，已冻结就取消。' },
+        { t: '电池优化设为不优化', path: ['设置', '电池', '电池优化', '短信转发'], d: '选择「不优化」，否则 Doze 会延迟后台网络。' },
+        { t: '锁住最近任务', path: ['多任务界面', '下拉卡片'], d: '下拉「短信转发」卡片出现小锁，一键清理时不会被杀。' }
+      ]
+    },
+    xiaomi: {
+      name: '小米 / Redmi', badge: 'MI', color: '#FF6900', device: 'Xiaomi（HyperOS / MIUI）',
+      title: '小米 / Redmi 设置步骤', sub: 'HyperOS 与 MIUI 12+',
+      note: 'HyperOS 把「省电策略」放在应用详情里，必须选「无限制」，否则锁屏后会被限制后台。',
+      steps: [
+        { t: '允许自启动', path: ['设置', '应用设置', '授权管理', '自启动管理'], d: '找到「短信转发」并打开开关。' },
+        { t: '关闭关联启动', path: ['设置', '应用设置', '授权管理', '自启动管理', '右上角设置'], d: '建议关闭「允许应用关联启动」，减少被别的 App 链式唤醒后又被杀。' },
+        { t: '省电策略设为无限制', path: ['设置', '应用设置', '应用管理', '短信转发', '省电策略'], d: '选择「无限制」，这是小米最关键的一步。' },
+        { t: '锁住最近任务', path: ['多任务界面', '长按卡片'], d: '长按卡片选「锁定」，或下拉卡片加锁。' }
+      ]
+    },
+    oppo: {
+      name: 'OPPO / 一加', badge: 'OP', color: '#1A9C5B', device: 'OPPO（ColorOS）',
+      title: 'OPPO / 一加 设置步骤', sub: 'ColorOS 11 及以上',
+      note: 'ColorOS 11.1 起有「允许完全后台行为」，低版本只有「允许后台运行」，含义相同。',
+      steps: [
+        { t: '允许完全后台行为', path: ['设置', '应用管理', '短信转发', '耗电管理'], d: '打开「允许完全后台行为」和「允许应用自启动」。' },
+        { t: '允许自启动', path: ['设置', '应用管理', '自启动管理'], d: 'ColorOS 11.1+ 路径；更早版本在「应用管理 › 短信转发 › 允许自启动」。' },
+        { t: '关闭应用速冻', path: ['手机管家', '应用速冻'], d: '把「短信转发」从速冻名单移除。' },
+        { t: '关闭睡眠待机优化', path: ['设置', '电池', '更多', '睡眠待机优化'], d: '睡前会冻结后台，必须关闭。' },
+        { t: '锁住最近任务', path: ['多任务界面', '下拉卡片'], d: '下拉卡片出现锁图标即可。' }
+      ]
+    },
+    vivo: {
+      name: 'vivo / iQOO', badge: 'vi', color: '#415FFF', device: 'vivo（OriginOS / Funtouch）',
+      title: 'vivo / iQOO 设置步骤', sub: 'OriginOS 与 Funtouch OS',
+      note: 'vivo 的「后台高耗电」开关藏得比较深，在电池耗电排行页右上角。',
+      steps: [
+        { t: '允许自启动', path: ['设置', '应用与权限', '权限管理', '自启动管理'], d: '打开「短信转发」的自启动。' },
+        { t: '允许后台高耗电', path: ['设置', '电池', '耗电排行', '右上角「后台高耗电」'], d: '找到「短信转发」，允许后台高耗电。' },
+        { t: 'i管家放行', path: ['i管家', '应用管理', '自启动'], d: '部分机型这里才是真正的开关。' },
+        { t: '锁住最近任务', path: ['多任务界面', '下拉卡片'], d: '下拉卡片加锁。' }
+      ]
+    },
+    huawei: {
+      name: '华为', badge: 'HW', color: '#C7000B', device: 'HUAWEI（HarmonyOS / EMUI）',
+      title: '华为 设置步骤', sub: 'HarmonyOS 与 EMUI',
+      note: 'HarmonyOS 5 及以上取消了独立「手机管家」，入口统一到「设置 › 应用和服务 › 应用启动管理」；找不到就在设置顶部搜索「应用启动管理」。',
+      steps: [
+        { t: '改为手动管理', path: ['设置', '应用和服务', '应用启动管理', '短信转发'], d: '关闭「自动管理」，弹出三个开关。' },
+        { t: '三个开关全开', path: ['启动管理', '手动管理'], d: '允许自启动、允许关联启动、允许后台活动，全部打开。' },
+        { t: '休眠保持网络', path: ['设置', '电池', '更多电池设置', '休眠时始终保持网络连接'], d: '可选但建议开启，否则锁屏久了推送会延迟。' },
+        { t: '锁住最近任务', path: ['多任务界面', '下拉卡片'], d: '下拉卡片加锁。' }
+      ]
+    },
+    honor: {
+      name: '荣耀', badge: 'HN', color: '#1E6FFF', device: 'HONOR（MagicOS）',
+      title: '荣耀 设置步骤', sub: 'MagicOS / Magic UI',
+      note: '荣耀与华为同源，入口在「设置 › 应用 › 应用启动管理」，同样要关自动管理改手动。',
+      steps: [
+        { t: '改为手动管理', path: ['设置', '应用', '应用启动管理', '短信转发'], d: '关闭「自动管理」。' },
+        { t: '三个开关全开', path: ['启动管理', '手动管理'], d: '允许自启动、允许关联启动、允许后台活动。' },
+        { t: '锁住最近任务', path: ['多任务界面', '下拉卡片'], d: '下拉卡片加锁。' }
+      ]
+    },
+    samsung: {
+      name: '三星', badge: 'SS', color: '#1428A0', device: 'Samsung（One UI）',
+      title: '三星 设置步骤', sub: 'One UI 5 及以上',
+      note: '三星会把不常用 App 自动丢进「休眠应用」，必须从名单里移出来。',
+      steps: [
+        { t: '移出休眠名单', path: ['设置', '电池', '后台使用限制'], d: '把「短信转发」从「休眠应用」「深度休眠应用」里移除。' },
+        { t: '电池设为不受限制', path: ['设置', '应用', '短信转发', '电池'], d: '选择「不受限制」。' },
+        { t: '保持打开', path: ['最近任务', '长按应用图标'], d: '选择「保持打开」，避免一键清理。' }
+      ]
+    },
+    meizu: {
+      name: '魅族', badge: 'MZ', color: '#00A3E0', device: 'MEIZU（Flyme）',
+      title: '魅族 设置步骤', sub: 'Flyme 8 及以上',
+      note: 'Flyme 的自启动与后台管理都在手机管家里。',
+      steps: [
+        { t: '允许自启动', path: ['手机管家', '权限管理', '自启动'], d: '打开「短信转发」。' },
+        { t: '允许后台运行', path: ['手机管家', '权限管理', '后台管理'], d: '设为「允许后台运行」。' },
+        { t: '省电模式放行', path: ['设置', '电池', '省电模式'], d: '开启省电模式时，确认本应用不被限制。' }
+      ]
+    },
+    nubia: {
+      name: '努比亚 / 红魔', badge: 'NB', color: '#E60012', device: 'nubia（MyOS）',
+      title: '努比亚 / 红魔 设置步骤', sub: 'MyOS / RedMagic OS',
+      note: '游戏手机的省电策略更激进，建议把本应用加入游戏空间的「后台保活」名单外。',
+      steps: [
+        { t: '允许自启动', path: ['设置', '应用', '自启动管理'], d: '打开「短信转发」。' },
+        { t: '允许后台耗电', path: ['设置', '电池', '后台耗电管理'], d: '允许后台活动。' },
+        { t: '锁住最近任务', path: ['多任务界面', '下拉卡片'], d: '下拉卡片加锁。' }
+      ]
+    },
+    pixel: {
+      name: '原生 / Pixel', badge: 'PX', color: '#3DDC84', device: 'Pixel / 原生 Android',
+      title: '原生 Android 设置步骤', sub: 'Pixel、索尼、摩托罗拉等',
+      note: '原生系统最省心，只需要电池优化放行，没有自启动白名单和速冻。',
+      steps: [
+        { t: '电池设为不受限制', path: ['设置', '应用', '短信转发', '电池'], d: '选择「不受限制」。' },
+        { t: '电池优化放行', path: ['设置', '电池', '电池优化', '所有应用', '短信转发'], d: '选择「不优化」。' },
+        { t: '允许通知', path: ['设置', '通知', '短信转发'], d: '前台服务通知必须可见，否则容易被回收。' }
+      ]
+    }
+  };
+
+  const CHECKS = [
+    '已开启自启动（开机/后台可被拉起）',
+    '已允许后台运行 / 完全后台行为',
+    '已加入电池优化白名单（不优化）',
+    '已关闭应用速冻 / 深度休眠',
+    '已在最近任务里加锁'
+  ];
+
+  let currentBrand = 'realme';
+  const done = new Set(JSON.parse(localStorage.getItem('smsf_keepalive') || '[]'));
+
+  const $ = (id) => document.getElementById(id);
+
+  function toast(msg) {
+    const el = $('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(window.__t);
+    window.__t = setTimeout(() => el.classList.remove('show'), 2000);
+  }
+
+  function renderBrands() {
+    $('brandRow').innerHTML = Object.entries(BRANDS).map(([key, b]) => `
+      <button class="brand ${key === currentBrand ? 'active' : ''}" onclick="selectBrand('${key}')">
+        <span class="dot" style="background:${b.color}">${b.badge}</span>${b.name}
+      </button>`).join('');
+  }
+
+  function renderChecks() {
+    $('checks').innerHTML = CHECKS.map((label, i) => `
+      <div class="check ${done.has(i) ? 'done' : ''}" onclick="toggleCheck(${i})">
+        <span class="box">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        </span>
+        <span class="label">${label}</span>
+      </div>`).join('');
+
+    const n = done.size;
+    $('doneNum').textContent = n;
+    $('barFill').style.width = (n / CHECKS.length * 100) + '%';
+  }
+
+  function toggleCheck(i) {
+    done.has(i) ? done.delete(i) : done.add(i);
+    localStorage.setItem('smsf_keepalive', JSON.stringify([...done]));
+    renderChecks();
+  }
+
+  function selectBrand(key) {
+    currentBrand = key;
+    const b = BRANDS[key];
+    $('deviceName').textContent = b.device;
+    $('stepsTitle').textContent = b.title;
+    $('stepsSub').textContent = b.sub;
+    $('steps').innerHTML = b.steps.map((s, i) => `
+      <div class="step">
+        <div class="no">${i + 1}</div>
+        <div style="flex:1">
+          <h4>${s.t}</h4>
+          <div class="path">${s.path.map((p, j) => j === s.path.length - 1 ? `<b>${p}</b>` : p).join(' › ')}</div>
+          <p>${s.d}</p>
+          <div class="actions">
+            <button class="btn tiny" onclick="toast('正式版会尝试跳转到：${s.path.join(' › ')}')">去设置</button>
+            <button class="btn ghost tiny" onclick="copyPath('${s.path.join(' › ')}')">复制路径</button>
+          </div>
+        </div>
+      </div>`).join('');
+    $('brandNote').textContent = b.note;
+    $('brandNote').style.display = 'block';
+    renderBrands();
+  }
+
+  function copyPath(text) {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => toast('已复制：' + text)).catch(() => toast('复制失败'));
+    } else {
+      toast('路径：' + text);
+    }
+  }
+
+  function renderAcc() {
+    $('acc').innerHTML = Object.entries(BRANDS).map(([key, b], idx) => `
+      <div class="acc-item ${idx === 0 ? 'open' : ''}" id="acc-${key}">
+        <div class="acc-head" onclick="toggleAcc('${key}')">
+          <span class="dot" style="background:${b.color}">${b.badge}</span>
+          <span class="t">${b.name}<small>${b.device}</small></span>
+          <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="acc-body">
+          <ol>${b.steps.map(s => `<li><b>${s.t}</b>：${s.path.join(' › ')}</li>`).join('')}</ol>
+          <button class="btn ghost tiny" onclick="selectBrand('${key}');toast('已切换到 ${b.name}')">查看详细步骤</button>
+        </div>
+      </div>`).join('');
+  }
+
+  function toggleAcc(key) {
+    const el = $('acc-' + key);
+    el.classList.toggle('open');
+  }
+
+  renderBrands();
+  renderChecks();
+  renderAcc();
+  selectBrand('realme');
+</script>
+</body>
+</html>

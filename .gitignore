@@ -1,0 +1,30 @@
+# Gradle / 构建产物
+.gradle/
+.kotlin/
+build/
+app/build/
+captures/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# 发布产物（APK 通过 GitHub Release 分发，不进源码）
+dist/
+
+# 本机配置（含 SDK 路径、签名信息）
+local.properties
+keystore.properties
+*.jks
+*.keystore
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+.DS_Store
+navigation/
+
+# 日志
+*.log
+build.log

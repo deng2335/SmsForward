@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">短信转发</string>
+    <string name="channel_listener_name">短信监听</string>
+    <string name="channel_listener_desc">保持短信实时捕获与转发</string>
+</resources>

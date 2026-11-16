@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  自建转发服务经常跑在局域网里（http://192.168.x.x:8080/sms），
+  Android 9+ 默认禁止明文 HTTP，这里显式放开，否则 Webhook 会报
+  "Cleartext HTTP traffic not permitted"。
+  如果你只用 HTTPS 渠道，可以把 cleartextTrafficPermitted 改成 false。
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

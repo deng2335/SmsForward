@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 信封主体 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,38 L78,38 A6,6 0 0 1 84,44 L84,68 A6,6 0 0 1 78,74 L30,74 A6,6 0 0 1 24,68 L24,44 A6,6 0 0 1 30,38 Z" />
+    <!-- 信封折线 -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M29,44 L54,62 L79,44"
+        android:strokeColor="#2F5BEA"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="5" />
+    <!-- 转发箭头徽标 -->
+    <path
+        android:fillColor="#7CF0E0"
+        android:pathData="M76,76 m-12,0 a12,12 0 1,0 24,0 a12,12 0 1,0 -24,0" />
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M71,71 L78,76 L71,81"
+        android:strokeColor="#10306E"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="3.2" />
+</vector>
